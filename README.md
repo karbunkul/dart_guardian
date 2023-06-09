@@ -46,8 +46,9 @@ Future<void> main() async {
 }
 
 int divide(int a, int b) {
-  final guardian = Groolt<int>()..extra({'a': a, 'b': b});
-  guardian.map<IntegerDivisionByZeroException>((err) => DivideException());
+  final guardian = Groolt<int>()
+    ..extra({'a': a, 'b': b})
+    ..map<IntegerDivisionByZeroException>((err) => DivideException());
 
   return guardian.guardSync(() => a ~/ b);
 }
