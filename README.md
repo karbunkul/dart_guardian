@@ -4,7 +4,7 @@ Useful for ease of error management and recording unexpected errors.
 
 ## Features
 
-- Convert from source to base exception
+- Convert from source to base error
 - Return value for matched source errors
 - Logging unexpected errors with extra fields
 
