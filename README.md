@@ -17,9 +17,10 @@ Create client (extends Guardian class), implements methods.
 class BaseError extends Error {}
 
 class UnexpectedError extends BaseError {}
+
 class DivideError extends BaseError {}
 
-class Groolt<T> extends Guardian<T, BaseError> {
+class Groot<T> extends Guardian<T, BaseError> {
   @override
   BaseError unexpectedError(Object error) {
     return UnexpectedError();
@@ -47,7 +48,7 @@ Future<void> main() async {
 }
 
 int divide(int a, int b) {
-  final guardian = Groolt<int>()
+  final guardian = Groot<int>()
     ..extra({'a': a, 'b': b})
     ..map<IntegerDivisionByZeroException>((err) => DivideError());
 

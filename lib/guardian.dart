@@ -1,3 +1,3 @@
 library guardian;
 
-export 'package:guardian/guardian.dart';
+export 'src/guardian.dart';
