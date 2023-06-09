@@ -1,6 +1,3 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
-library;
+library guardian;
 
-export 'src/types.dart';
+export 'package:guardian/guardian.dart';

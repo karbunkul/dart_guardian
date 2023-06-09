@@ -1,19 +1,21 @@
+import 'exceptions.dart';
 import 'handlers.dart';
 import 'log.dart';
 
 typedef GuardHandler<T> = T Function();
 
 abstract class Guardian<T, E extends Error> {
+  final Map<Type, IHandler> _handlers = {};
+  final LogExtra _extra = {};
+
   /// Handler for logging unexpected errors
   void onLog(GuardianLog log);
 
   /// Unexpected error, must be extend E
   E unexpectedError(Object error);
 
-  final Map<Type, IHandler> _handlers = {};
-  final LogExtra _extra = {};
-
-  void extra(Map<String, dynamic> value) {
+  /// Log expected error with extra fields
+  void extra(LogExtra value) {
     _extra.clear();
     _extra.addAll(value);
   }
@@ -22,6 +24,9 @@ abstract class Guardian<T, E extends Error> {
     GuardHandler<Future<T>> handler, {
     Duration? timeLimit,
   }) async {
+    if (_handlers.isEmpty) {
+      throw GuardianEmptyHandlersException();
+    }
     try {
       if (timeLimit != null) {
         return await handler().timeout(timeLimit);
@@ -34,6 +39,10 @@ abstract class Guardian<T, E extends Error> {
   }
 
   T guardSync(GuardHandler<T> handler) {
+    if (_handlers.isEmpty) {
+      throw GuardianEmptyHandlersException();
+    }
+
     try {
       return handler();
     } catch (error, stackTrace) {
@@ -41,69 +50,63 @@ abstract class Guardian<T, E extends Error> {
     }
   }
 
-  /// Мапим ошибку
-  void map<I>(MapHandler<E> onMap) {
-    _checkHandler<I>();
-    final key = _typeOf<I>();
-    final mapper = Mapper<I, E>(onMap: onMap);
-    _handlers.putIfAbsent(key, () => mapper);
+  /// Convert error to exception extend from E
+  void map<I>(MapCallback<E> onMap) {
+    _checkDuplicates<I>();
+    _handlers.putIfAbsent(_typeOf<I>(), () => Mapper<I, E>(onMap: onMap));
   }
 
-  /// Выполняем колбек и возвращаем то что он отдаст
+  /// Return value if catch error
   void handle<I extends Object>(HandleCallback<T> onHandle) {
-    _checkHandler<I>();
-    final key = _typeOf<I>();
-    final handler = Handler<T>(onHandle: onHandle);
-    _handlers.putIfAbsent(key, () => handler);
+    _checkDuplicates<I>();
+    _handlers.putIfAbsent(_typeOf<I>(), () => Handler<T>(onHandle: onHandle));
   }
 
-  void _checkHandler<I>() {
-    final key = _typeOf<I>();
-
-    /// Если по такому типу уже есть маппер кидаем ошибку
-    if (_handlers.containsKey(key)) {
-      final message = 'Duplicate handler for type $I';
-      // _onError(message: message, error: error, stackTrace: stackTrace)
-      throw Exception(message);
+  void _checkDuplicates<I>() {
+    if (_handlers.containsKey(_typeOf<I>())) {
+      // final message = 'Duplicate handler for type $I';
+      throw GuardianDuplicateException(I);
     }
   }
 
+  /// Process error, map or handle
   T _onCatchError(Object error, StackTrace stackTrace) {
+    if (error is E) {
+      throw error;
+    }
+
     final key = error.runtimeType;
 
-    if (_handlers.isEmpty) {
-      const message = 'Missing handlers';
-      _onError(message: message, error: error, stackTrace: stackTrace);
-    } else {
-      final handler = _handlers[key];
+    final handler = _handlers[key];
 
-      if (handler is Mapper) {
-        Object? newError;
+    if (handler is Mapper) {
+      Object? newError;
 
-        try {
-          newError = handler.onMap(error);
-        } on Object {
-          final message = 'Error in handler for $key';
-          _onError(message: message, error: error, stackTrace: stackTrace);
-        } finally {
-          if (newError != null) {
-            throw Error.throwWithStackTrace(newError, stackTrace);
-          }
-        }
-      } else if (handler is Handler) {
-        try {
-          return handler.onHandle(error);
-        } on Object {
-          final message = 'Error in handler for $key';
-          _onError(message: message, error: error, stackTrace: stackTrace);
+      try {
+        newError = handler.onMap(error);
+      } on Object {
+        final message = 'Error in handler for $key';
+        _onError(message: message, error: error, stackTrace: stackTrace);
+      } finally {
+        if (newError != null) {
+          throw Error.throwWithStackTrace(newError, stackTrace);
         }
       }
-
-      const message = 'UnexpectedError';
-      _onError(message: message, error: error, stackTrace: stackTrace);
     }
+
+    if (handler is Handler) {
+      try {
+        return handler.onHandle(error);
+      } on Object {
+        final message = 'Error in handler for $key';
+        _onError(message: message, error: error, stackTrace: stackTrace);
+      }
+    }
+    const message = 'UnexpectedError';
+    _onError(message: message, error: error, stackTrace: stackTrace);
   }
 
+  /// Log unexpected error
   Never _onError({
     required String message,
     required Object error,

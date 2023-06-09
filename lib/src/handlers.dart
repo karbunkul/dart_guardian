@@ -1,10 +1,10 @@
-typedef MapHandler<T> = T Function(Object error);
+typedef MapCallback<T> = T Function(Object error);
 typedef HandleCallback<T> = T Function(Object error);
 
 abstract class IHandler {}
 
 class Mapper<I, O> extends IHandler {
-  final MapHandler<O> onMap;
+  final MapCallback<O> onMap;
 
   Mapper({required this.onMap});
 }
