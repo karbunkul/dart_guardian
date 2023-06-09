@@ -14,14 +14,15 @@ Create client (extends Guardian class), implements methods.
 
 ```dart
 
-class BaseException extends Error {}
+class BaseError extends Error {}
 
-class UnexpectedFatalException extends BaseException {}
+class UnexpectedError extends BaseError {}
+class DivideError extends BaseError {}
 
-class Groolt<T> extends Guardian<T, BaseException> {
+class Groolt<T> extends Guardian<T, BaseError> {
   @override
-  BaseException unexpectedError(Object error) {
-    return UnexpectedFatalException();
+  BaseError unexpectedError(Object error) {
+    return UnexpectedError();
   }
 
   @override
@@ -48,7 +49,7 @@ Future<void> main() async {
 int divide(int a, int b) {
   final guardian = Groolt<int>()
     ..extra({'a': a, 'b': b})
-    ..map<IntegerDivisionByZeroException>((err) => DivideException());
+    ..map<IntegerDivisionByZeroException>((err) => DivideError());
 
   return guardian.guardSync(() => a ~/ b);
 }
