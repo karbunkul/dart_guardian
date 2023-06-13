@@ -10,7 +10,7 @@ Useful for ease of error management and recording unexpected errors.
 
 ## Getting started
 
-Create client (extends Guardian class), implements methods.
+Create client (extends BaseGuardian class), implements methods.
 
 ```dart
 
@@ -20,7 +20,7 @@ class UnexpectedError extends BaseError {}
 
 class DivideError extends BaseError {}
 
-class Groot<T> extends Guardian<T, BaseError> {
+class Guardian<T> extends BaseGuardian<T, BaseError> {
   @override
   BaseError unexpectedError(Object error) {
     return UnexpectedError();
@@ -48,7 +48,7 @@ Future<void> main() async {
 }
 
 int divide(int a, int b) {
-  final guardian = Groot<int>()
+  final guardian = Guardian<int>()
     ..extra({'a': a, 'b': b})
     ..map<IntegerDivisionByZeroException>((err) => DivideError());
 

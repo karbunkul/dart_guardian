@@ -1,10 +1,12 @@
 name: guardian
-description: A starting point for Dart libraries or applications.
-version: 0.9.0
-# repository: https://github.com/my_org/my_repo
+description: Useful for ease of error management and recording unexpected errors.
+version: 0.9.1
+repository: https://github.com/karbunkul/dart_guardian
+topics:
+  - error management
 
 environment:
-  sdk: ^3.0.2
+  sdk: ">=2.18.0 <4.0.0"
 
 dev_dependencies:
   lints: ^2.0.0

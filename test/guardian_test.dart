@@ -18,10 +18,10 @@ abstract class ILog {
 
 class LogMock extends Mock implements ILog {}
 
-class Groolt<T> extends Guardian<T, BaseException> {
+class Guardian<T> extends BaseGuardian<T, BaseException> {
   final LogMock mock;
 
-  Groolt(this.mock);
+  Guardian(this.mock);
 
   @override
   void onLog(GuardianLog log) => mock.onLog(log);
@@ -44,7 +44,7 @@ void main() {
 
   group('Guardian tests', () {
     group('map', () {
-      final guardian = Groolt<void>(logMock);
+      final guardian = Guardian<void>(logMock);
 
       test('two or more duplicates of mapper', () {
         expect(
@@ -68,7 +68,7 @@ void main() {
     });
 
     group('handle', () {
-      final guardian = Groolt<void>(logMock);
+      final guardian = Guardian<void>(logMock);
 
       test('two or more duplicates of handler', () {
         expect(
@@ -93,7 +93,7 @@ void main() {
 
     group('guard', () {
       test('empty handlers', () {
-        final guardian = Groolt<void>(logMock);
+        final guardian = Guardian<void>(logMock);
 
         expect(
           () async => guardian.guard(() async {}),
@@ -102,7 +102,7 @@ void main() {
       });
 
       test('map successful', () {
-        final guardian = Groolt<void>(logMock);
+        final guardian = Guardian<void>(logMock);
         guardian.map<TimeoutException>((error) => LimitException());
         expect(
           () => guardian.guard(() => throw TimeoutException('')),
@@ -112,7 +112,7 @@ void main() {
 
       test('map failed', () {
         //throw exception and log it, if failed map callback
-        final guardian = Groolt<void>(logMock);
+        final guardian = Guardian<void>(logMock);
         guardian.extra(extra);
         guardian.map<ArgumentError>((error) => throw Exception());
 
@@ -130,7 +130,7 @@ void main() {
       });
 
       test('handle successful', () async {
-        final guardian = Groolt<int>(logMock);
+        final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
         expect(
           await guardian.guard(() => throw TimeoutException('')),
@@ -139,7 +139,7 @@ void main() {
       });
 
       test('handle failed', () async {
-        final guardian = Groolt<int>(logMock);
+        final guardian = Guardian<int>(logMock);
         guardian.extra(extra);
         guardian.handle<ArgumentError>((error) => throw ArgumentError());
 
@@ -157,7 +157,7 @@ void main() {
       });
 
       test('pass if error is base exception', () {
-        final guardian = Groolt<int>(logMock);
+        final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
 
         expect(
@@ -169,7 +169,7 @@ void main() {
 
     group('guardSync', () {
       test('empty handlers', () {
-        final guardian = Groolt<void>(logMock);
+        final guardian = Guardian<void>(logMock);
 
         expect(
           () => guardian.guardSync(() {}),
@@ -178,7 +178,7 @@ void main() {
       });
 
       test('map successful', () {
-        final guardian = Groolt<void>(logMock);
+        final guardian = Guardian<void>(logMock);
         guardian.map<TimeoutException>((error) => LimitException());
         expect(
           () => guardian.guardSync(() => throw TimeoutException('')),
@@ -188,7 +188,7 @@ void main() {
 
       test('map failed', () {
         //throw exception and log it, if failed map callback
-        final guardian = Groolt<void>(logMock);
+        final guardian = Guardian<void>(logMock);
         guardian.extra(extra);
         guardian.map<ArgumentError>((error) => throw Exception());
 
@@ -206,7 +206,7 @@ void main() {
       });
 
       test('handle successful', () {
-        final guardian = Groolt<int>(logMock);
+        final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
         expect(
           guardian.guardSync(() => throw TimeoutException('')),
@@ -215,7 +215,7 @@ void main() {
       });
 
       test('handle failed', () async {
-        final guardian = Groolt<int>(logMock);
+        final guardian = Guardian<int>(logMock);
         guardian.extra(extra);
         guardian.handle<ArgumentError>((error) => throw ArgumentError());
 
@@ -233,7 +233,7 @@ void main() {
       });
 
       test('pass if error is base exception', () {
-        final guardian = Groolt<int>(logMock);
+        final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
 
         expect(

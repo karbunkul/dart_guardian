@@ -9,3 +9,4 @@ pubspec.lock
 *.iml
 *.ipr
 *.iws
+coverage

@@ -4,7 +4,7 @@ import 'log.dart';
 
 typedef GuardHandler<T> = T Function();
 
-abstract class Guardian<T, E extends Error> {
+abstract class BaseGuardian<T, E extends Error> {
   final Map<Type, IHandler> _handlers = {};
   final LogExtra _extra = {};
 
