@@ -7,3 +7,7 @@ class GuardianDuplicateException extends Error {
 
   GuardianDuplicateException(this.type);
 }
+
+class GuardianObserverAlreadyInitializedException extends Error {}
+
+class GuardianObserverNotInitializedException extends Error {}
