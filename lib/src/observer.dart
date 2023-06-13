@@ -31,4 +31,9 @@ class GuardianObserver {
   static reset() {
     _onLog = null;
   }
+
+  @visibleForTesting
+  static stub() {
+    _onLog = (_) {};
+  }
 }

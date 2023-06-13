@@ -64,5 +64,11 @@ void main() {
       expect(log.message, equals(message));
       expect(log.stackTrace, TypeMatcher<StackTrace>());
     });
+
+    test('stub', () {
+      GuardianObserver.stub();
+
+      expect(() => GuardianObserver.onLog, returnsNormally);
+    });
   });
 }
