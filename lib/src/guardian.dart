@@ -24,9 +24,6 @@ abstract class BaseGuardian<T, E extends Error> {
     GuardHandler<Future<T>> handler, {
     Duration? timeLimit,
   }) async {
-    if (_handlers.isEmpty) {
-      throw GuardianEmptyHandlersException();
-    }
     try {
       if (timeLimit != null) {
         return await handler().timeout(timeLimit);
@@ -39,10 +36,6 @@ abstract class BaseGuardian<T, E extends Error> {
   }
 
   T guardSync(GuardHandler<T> handler) {
-    if (_handlers.isEmpty) {
-      throw GuardianEmptyHandlersException();
-    }
-
     try {
       return handler();
     } catch (error, stackTrace) {

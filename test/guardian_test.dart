@@ -92,15 +92,6 @@ void main() {
     });
 
     group('guard', () {
-      test('empty handlers', () {
-        final guardian = Guardian<void>(logMock);
-
-        expect(
-          () async => guardian.guard(() async {}),
-          throwsA(TypeMatcher<GuardianEmptyHandlersException>()),
-        );
-      });
-
       test('map successful', () {
         final guardian = Guardian<void>(logMock);
         guardian.map<TimeoutException>((error) => LimitException());
@@ -168,15 +159,6 @@ void main() {
     });
 
     group('guardSync', () {
-      test('empty handlers', () {
-        final guardian = Guardian<void>(logMock);
-
-        expect(
-          () => guardian.guardSync(() {}),
-          throwsA(TypeMatcher<GuardianEmptyHandlersException>()),
-        );
-      });
-
       test('map successful', () {
         final guardian = Guardian<void>(logMock);
         guardian.map<TimeoutException>((error) => LimitException());
