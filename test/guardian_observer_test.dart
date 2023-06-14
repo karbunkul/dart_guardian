@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:guardian/guardian.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -51,9 +53,15 @@ void main() {
       const extra = {'foo': 'bar'};
       const message = 'test message';
       final stackTrace = StackTraceMock();
+      final error = TimeoutException('test');
 
       GuardianObserver.onLog(
-        GuardianLog(message: message, stackTrace: stackTrace, extra: extra),
+        GuardianLog(
+          message: message,
+          error: error,
+          stackTrace: stackTrace,
+          extra: extra,
+        ),
       );
 
       final captured = verify(() => mock.onLog(captureAny()));
@@ -62,6 +70,7 @@ void main() {
 
       expect(log.extra.toString(), equals(extra.toString()));
       expect(log.message, equals(message));
+      expect(log.error, equals(error));
       expect(log.stackTrace, TypeMatcher<StackTrace>());
     });
 

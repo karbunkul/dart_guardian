@@ -105,7 +105,14 @@ abstract class BaseGuardian<T, E extends Error> {
     required Object error,
     required StackTrace stackTrace,
   }) {
-    onLog(GuardianLog(message: message, stackTrace: stackTrace, extra: _extra));
+    onLog(
+      GuardianLog(
+        message: message,
+        error: error,
+        stackTrace: stackTrace,
+        extra: _extra,
+      ),
+    );
     throw Error.throwWithStackTrace(unexpectedError(error), stackTrace);
   }
 
