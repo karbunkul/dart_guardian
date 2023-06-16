@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'exceptions.dart';
 import 'handlers.dart';
 import 'log.dart';
@@ -44,7 +46,7 @@ abstract class BaseGuardian<T, E extends Error> {
   }
 
   /// Convert error to exception extend from E
-  void map<I>(MapCallback<E> onMap) {
+  void map<I extends Object>(MapCallback<I, E> onMap) {
     _checkDuplicates<I>();
     _handlers.putIfAbsent(_typeOf<I>(), () => Mapper<I, E>(onMap: onMap));
   }
@@ -76,10 +78,10 @@ abstract class BaseGuardian<T, E extends Error> {
       Object? newError;
 
       try {
-        newError = handler.onMap(error);
-      } on Object {
+        newError = handler.castMap(error);
+      } on Object catch (err, stack) {
         final message = 'Error in handler for $key';
-        _onError(message: message, error: error, stackTrace: stackTrace);
+        _onError(message: message, error: err, stackTrace: stack);
       } finally {
         if (newError != null) {
           throw Error.throwWithStackTrace(newError, stackTrace);
@@ -90,9 +92,9 @@ abstract class BaseGuardian<T, E extends Error> {
     if (handler is Handler) {
       try {
         return handler.onHandle(error);
-      } on Object {
+      } on Object catch (err, stack) {
         final message = 'Error in handler for $key';
-        _onError(message: message, error: error, stackTrace: stackTrace);
+        _onError(message: message, error: err, stackTrace: stack);
       }
     }
     const message = 'UnexpectedError';
