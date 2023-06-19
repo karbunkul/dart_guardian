@@ -33,6 +33,10 @@ abstract class BaseGuardian<T, E extends Error> {
 
       return await handler();
     } catch (error, stackTrace) {
+      if (error is E) {
+        rethrow;
+      }
+
       return _onCatchError(error, stackTrace);
     }
   }
@@ -41,6 +45,10 @@ abstract class BaseGuardian<T, E extends Error> {
     try {
       return handler();
     } catch (error, stackTrace) {
+      if (error is E) {
+        rethrow;
+      }
+
       return _onCatchError(error, stackTrace);
     }
   }
@@ -66,10 +74,6 @@ abstract class BaseGuardian<T, E extends Error> {
 
   /// Process error, map or handle
   T _onCatchError(Object error, StackTrace stackTrace) {
-    if (error is E) {
-      throw error;
-    }
-
     final key = error.runtimeType;
 
     final handler = _handlers[key];

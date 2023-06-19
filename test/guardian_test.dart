@@ -156,6 +156,22 @@ void main() {
           throwsA(TypeMatcher<LimitException>()),
         );
       });
+
+      test('time limit', () async {
+        final guardian = Guardian<int>(logMock);
+        guardian.map<TimeoutException>((error) => LimitException());
+
+        expect(
+          guardian.guard(
+            () async {
+              await Future.delayed(const Duration(milliseconds: 20));
+              return 1;
+            },
+            timeLimit: Duration.zero,
+          ),
+          throwsA(TypeMatcher<LimitException>()),
+        );
+      });
     });
 
     group('guardSync', () {
