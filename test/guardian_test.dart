@@ -94,9 +94,16 @@ void main() {
     group('guard', () {
       test('map successful', () {
         final guardian = Guardian<void>(logMock);
-        guardian.map<TimeoutException>((_) => LimitException());
+        guardian
+          ..map<Exception>((_) => LimitException())
+          ..map<TimeoutException>((_) => LimitException());
         expect(
           () => guardian.guard(() => throw TimeoutException('')),
+          throwsA(TypeMatcher<LimitException>()),
+        );
+
+        expect(
+          () => guardian.guard(() => throw Exception()),
           throwsA(TypeMatcher<LimitException>()),
         );
       });
@@ -177,9 +184,17 @@ void main() {
     group('guardSync', () {
       test('map successful', () {
         final guardian = Guardian<void>(logMock);
-        guardian.map<TimeoutException>((_) => LimitException());
+
+        guardian
+          ..map<Exception>((_) => LimitException())
+          ..map<TimeoutException>((_) => LimitException());
         expect(
           () => guardian.guardSync(() => throw TimeoutException('')),
+          throwsA(TypeMatcher<LimitException>()),
+        );
+
+        expect(
+          () => guardian.guardSync(() => throw Exception()),
           throwsA(TypeMatcher<LimitException>()),
         );
       });

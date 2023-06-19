@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
+
 import 'exceptions.dart';
 import 'handlers.dart';
 import 'log.dart';
@@ -67,16 +69,24 @@ abstract class BaseGuardian<T, E extends Error> {
 
   void _checkDuplicates<I>() {
     if (_handlers.containsKey(_typeOf<I>())) {
-      // final message = 'Duplicate handler for type $I';
       throw GuardianDuplicateException(I);
+    }
+  }
+
+  IHandler? _findMapper(Object error) {
+    final key = error.runtimeType;
+
+    if (_handlers.containsKey(key)) {
+      return _handlers[key];
+    } else {
+      return _handlers.values
+          .firstWhereOrNull((element) => element.hasApply(error));
     }
   }
 
   /// Process error, map or handle
   T _onCatchError(Object error, StackTrace stackTrace) {
-    final key = error.runtimeType;
-
-    final handler = _handlers[key];
+    final handler = _findMapper(error);
 
     if (handler is Mapper) {
       Object? newError;
@@ -84,6 +94,7 @@ abstract class BaseGuardian<T, E extends Error> {
       try {
         newError = handler.castMap(error);
       } on Object catch (err, stack) {
+        final key = error.runtimeType;
         final message = 'Error in handler for $key';
         _onError(message: message, error: err, stackTrace: stack);
       } finally {
@@ -97,6 +108,7 @@ abstract class BaseGuardian<T, E extends Error> {
       try {
         return handler.onHandle(error);
       } on Object catch (err, stack) {
+        final key = error.runtimeType;
         final message = 'Error in handler for $key';
         _onError(message: message, error: err, stackTrace: stack);
       }
