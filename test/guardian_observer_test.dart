@@ -76,7 +76,6 @@ void main() {
 
     test('stub', () {
       GuardianObserver.stub();
-
       expect(() => GuardianObserver.onLog, returnsNormally);
     });
   });

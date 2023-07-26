@@ -1,8 +1,8 @@
 typedef MapCallback<I, T> = T Function(I error);
-typedef HandleCallback<T> = T Function(Object error);
+typedef HandleCallback<T, I> = T Function(I error);
 
 abstract class IHandler<T> {
-  bool hasApply(dynamic value) => value is T;
+  bool hasApply(Object value) => value is T;
 }
 
 class Mapper<I extends Object, O> extends IHandler<I> {
@@ -15,8 +15,12 @@ class Mapper<I extends Object, O> extends IHandler<I> {
   }
 }
 
-class Handler<O> extends IHandler<O> {
-  final HandleCallback<O> onHandle;
+class Handler<O, I> extends IHandler<I> {
+  final HandleCallback<O, I> onHandle;
 
   Handler({required this.onHandle});
+
+  O castHandle(Object error) {
+    return onHandle(error as I);
+  }
 }

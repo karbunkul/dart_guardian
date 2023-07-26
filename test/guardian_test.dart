@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:guardian/src/exceptions.dart';
-import 'package:guardian/src/guardian.dart';
-import 'package:guardian/src/log.dart';
+import 'package:guardian/guardian.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 

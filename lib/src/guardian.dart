@@ -1,27 +1,39 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:meta/meta.dart';
 
 import 'exceptions.dart';
 import 'handlers.dart';
 import 'log.dart';
 
 typedef GuardHandler<T> = T Function();
+typedef UnexpectedCallback<E> = E Function(Object error);
 
 abstract class BaseGuardian<T, E extends Error> {
   final Map<Type, IHandler> _handlers = {};
   final LogExtra _extra = {};
+  UnexpectedCallback<E>? _unexpectedCallback;
 
   /// Handler for logging unexpected errors
+  @protected
   void onLog(GuardianLog log);
 
   /// Unexpected error, must be extend E
+  @protected
   E unexpectedError(Object error);
 
   /// Log expected error with extra fields
-  void extra(LogExtra value) {
+  BaseGuardian<T, E> extra(LogExtra value) {
     _extra.clear();
     _extra.addAll(value);
+    return this;
+  }
+
+  BaseGuardian<T, E> defaultError(UnexpectedCallback<E> callback) {
+    _unexpectedCallback = callback;
+
+    return this;
   }
 
   Future<T> guard(
@@ -35,10 +47,6 @@ abstract class BaseGuardian<T, E extends Error> {
 
       return await handler();
     } catch (error, stackTrace) {
-      if (error is E) {
-        rethrow;
-      }
-
       return _onCatchError(error, stackTrace);
     }
   }
@@ -47,24 +55,25 @@ abstract class BaseGuardian<T, E extends Error> {
     try {
       return handler();
     } catch (error, stackTrace) {
-      if (error is E) {
-        rethrow;
-      }
-
       return _onCatchError(error, stackTrace);
     }
   }
 
   /// Convert error to exception extend from E
-  void map<I extends Object>(MapCallback<I, E> onMap) {
+  BaseGuardian<T, E> map<I extends Object>(MapCallback<I, E> onMap) {
     _checkDuplicates<I>();
     _handlers.putIfAbsent(_typeOf<I>(), () => Mapper<I, E>(onMap: onMap));
+
+    return this;
   }
 
   /// Return value if catch error
-  void handle<I extends Object>(HandleCallback<T> onHandle) {
+  BaseGuardian<T, E> handle<I extends Object>(HandleCallback<T, I> onHandle) {
     _checkDuplicates<I>();
-    _handlers.putIfAbsent(_typeOf<I>(), () => Handler<T>(onHandle: onHandle));
+    _handlers.putIfAbsent(
+        _typeOf<I>(), () => Handler<T, I>(onHandle: onHandle));
+
+    return this;
   }
 
   void _checkDuplicates<I>() {
@@ -106,13 +115,18 @@ abstract class BaseGuardian<T, E extends Error> {
 
     if (handler is Handler) {
       try {
-        return handler.onHandle(error);
+        return handler.castHandle(error);
       } on Object catch (err, stack) {
         final key = error.runtimeType;
         final message = 'Error in handler for $key';
         _onError(message: message, error: err, stackTrace: stack);
       }
     }
+
+    if (error is E) {
+      throw error;
+    }
+
     const message = 'UnexpectedError';
     _onError(message: message, error: error, stackTrace: stackTrace);
   }
@@ -131,9 +145,11 @@ abstract class BaseGuardian<T, E extends Error> {
         extra: _extra,
       ),
     );
-    throw Error.throwWithStackTrace(unexpectedError(error), stackTrace);
+
+    final callback = _unexpectedCallback ?? unexpectedError;
+    throw Error.throwWithStackTrace(callback(error), stackTrace);
   }
 
-  /// Get RuntimeType from Generic
+  /// Get Type from Generic
   Type _typeOf<I>() => I;
 }
