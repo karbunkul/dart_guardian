@@ -155,7 +155,7 @@ void main() {
       test('pass if error is base exception', () {
         final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
-
+        //TODO(karbunkul): Need check stackTrace
         expect(
           () => guardian.guard(() => throw LimitException()),
           throwsA(TypeMatcher<LimitException>()),

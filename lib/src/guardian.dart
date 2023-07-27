@@ -124,7 +124,7 @@ abstract class BaseGuardian<T, E extends Error> {
     }
 
     if (error is E) {
-      throw error;
+      throw Error.throwWithStackTrace(error, stackTrace);
     }
 
     const message = 'UnexpectedError';
