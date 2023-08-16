@@ -96,12 +96,12 @@ void main() {
           ..map<Exception>((_) => LimitException())
           ..map<TimeoutException>((_) => LimitException());
         expect(
-          () => guardian.guard(() => throw TimeoutException('')),
+          guardian.guard((_) => throw TimeoutException('')),
           throwsA(TypeMatcher<LimitException>()),
         );
 
         expect(
-          () => guardian.guard(() => throw Exception()),
+          () => guardian.guard((_) => throw Exception()),
           throwsA(TypeMatcher<LimitException>()),
         );
       });
@@ -113,7 +113,7 @@ void main() {
         guardian.map<ArgumentError>((error) => throw Exception());
 
         expect(
-          () async => guardian.guard(() => throw ArgumentError('')),
+          guardian.guard((_) => throw ArgumentError('')),
           throwsA(TypeMatcher<FatalException>()),
         );
 
@@ -129,18 +129,18 @@ void main() {
         final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
         expect(
-          await guardian.guard(() => throw TimeoutException('')),
+          await guardian.guard((_) => throw TimeoutException('')),
           equals(10),
         );
       });
 
-      test('handle failed', () async {
+      test('handle failed', () {
         final guardian = Guardian<int>(logMock);
         guardian.extra(extra);
         guardian.handle<ArgumentError>((error) => throw ArgumentError());
 
         expect(
-          () async => guardian.guard(() => throw ArgumentError('')),
+          guardian.guard((_) => throw ArgumentError('')),
           throwsA(TypeMatcher<FatalException>()),
         );
 
@@ -157,7 +157,7 @@ void main() {
         guardian.handle<TimeoutException>((error) => 10);
         //TODO(karbunkul): Need check stackTrace
         expect(
-          () => guardian.guard(() => throw LimitException()),
+          guardian.guard((_) => throw LimitException()),
           throwsA(TypeMatcher<LimitException>()),
         );
       });
@@ -168,7 +168,7 @@ void main() {
 
         expect(
           guardian.guard(
-            () async {
+            (_) async {
               await Future.delayed(const Duration(milliseconds: 20));
               return 1;
             },
@@ -187,12 +187,12 @@ void main() {
           ..map<Exception>((_) => LimitException())
           ..map<TimeoutException>((_) => LimitException());
         expect(
-          () => guardian.guardSync(() => throw TimeoutException('')),
+          () => guardian.guardSync((_) => throw TimeoutException('')),
           throwsA(TypeMatcher<LimitException>()),
         );
 
         expect(
-          () => guardian.guardSync(() => throw Exception()),
+          () => guardian.guardSync((_) => throw Exception()),
           throwsA(TypeMatcher<LimitException>()),
         );
       });
@@ -204,7 +204,7 @@ void main() {
         guardian.map<ArgumentError>((error) => throw Exception());
 
         expect(
-          () => guardian.guardSync(() => throw ArgumentError('')),
+          () => guardian.guardSync((_) => throw ArgumentError('')),
           throwsA(TypeMatcher<FatalException>()),
         );
 
@@ -220,7 +220,7 @@ void main() {
         final guardian = Guardian<int>(logMock);
         guardian.handle<TimeoutException>((error) => 10);
         expect(
-          guardian.guardSync(() => throw TimeoutException('')),
+          guardian.guardSync((_) => throw TimeoutException('')),
           equals(10),
         );
       });
@@ -231,7 +231,7 @@ void main() {
         guardian.handle<ArgumentError>((error) => throw ArgumentError());
 
         expect(
-          () => guardian.guardSync(() => throw ArgumentError('')),
+          () => guardian.guardSync((_) => throw ArgumentError('')),
           throwsA(TypeMatcher<FatalException>()),
         );
 
@@ -248,7 +248,7 @@ void main() {
         guardian.handle<TimeoutException>((error) => 10);
 
         expect(
-          () => guardian.guardSync(() => throw LimitException()),
+          () => guardian.guardSync((_) => throw LimitException()),
           throwsA(TypeMatcher<LimitException>()),
         );
       });

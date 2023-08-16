@@ -1,18 +1,22 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:guardian/src/trace_item.dart';
 import 'package:meta/meta.dart';
 
 import 'exceptions.dart';
 import 'handlers.dart';
 import 'log.dart';
+import 'logger.dart';
 
-typedef GuardHandler<T> = T Function();
+typedef GuardHandler<T> = T Function(Logger logger);
 typedef UnexpectedCallback<E> = E Function(Object error);
 
 abstract class BaseGuardian<T, E extends Error> {
   final Map<Type, IHandler> _handlers = {};
   final LogExtra _extra = {};
+  late final _logger = _Logger(onTrace: onTrace);
+
   UnexpectedCallback<E>? _unexpectedCallback;
 
   /// Handler for logging unexpected errors
@@ -40,20 +44,22 @@ abstract class BaseGuardian<T, E extends Error> {
     GuardHandler<Future<T>> handler, {
     Duration? timeLimit,
   }) async {
+    _logger.clear();
     try {
       if (timeLimit != null) {
-        return await handler().timeout(timeLimit);
+        return await handler(_logger).timeout(timeLimit);
       }
 
-      return await handler();
+      return await handler(_logger);
     } catch (error, stackTrace) {
       return _onCatchError(error, stackTrace);
     }
   }
 
   T guardSync(GuardHandler<T> handler) {
+    _logger.clear();
     try {
-      return handler();
+      return handler(_logger);
     } catch (error, stackTrace) {
       return _onCatchError(error, stackTrace);
     }
@@ -143,6 +149,7 @@ abstract class BaseGuardian<T, E extends Error> {
         error: error,
         stackTrace: stackTrace,
         extra: _extra,
+        traces: _logger.items,
       ),
     );
 
@@ -150,6 +157,35 @@ abstract class BaseGuardian<T, E extends Error> {
     throw Error.throwWithStackTrace(callback(error), stackTrace);
   }
 
+  void onTrace(TraceItem item) {}
+
   /// Get Type from Generic
   Type _typeOf<I>() => I;
+}
+
+typedef OnTraceCallback = void Function(TraceItem item);
+
+class _Logger extends Logger {
+  final OnTraceCallback onTrace;
+
+  final List<TraceItem> _items = [];
+
+  _Logger({required this.onTrace});
+
+  @override
+  void info<T>({required String message, required T data}) {
+    final item = TraceItem(message: message, data: data);
+    _items.add(item);
+    onTrace(item);
+  }
+
+  @override
+  void message(String message) {
+    final item = TraceItem(message: message);
+    _items.add(item);
+    onTrace(item);
+  }
+
+  void clear() => _items.clear();
+  List<TraceItem> get items => List.unmodifiable(_items);
 }

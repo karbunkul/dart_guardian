@@ -61,6 +61,7 @@ void main() {
           error: error,
           stackTrace: stackTrace,
           extra: extra,
+          traces: [],
         ),
       );
 
