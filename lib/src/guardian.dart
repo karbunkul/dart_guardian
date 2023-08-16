@@ -22,7 +22,7 @@ abstract class BaseGuardian<T, E extends Error> {
 
   /// Handler for logging unexpected errors
   @protected
-  void onReport(ErrorReport log);
+  void onReport(ErrorReport report);
 
   /// Unexpected error, must be extend E
   @protected
@@ -37,7 +37,6 @@ abstract class BaseGuardian<T, E extends Error> {
 
   BaseGuardian<T, E> defaultError(UnexpectedCallback<E> callback) {
     _unexpectedCallback = callback;
-
     return this;
   }
 
@@ -184,7 +183,7 @@ abstract class BaseGuardian<T, E extends Error> {
     throw Error.throwWithStackTrace(callback(error), stackTrace);
   }
 
-  void onLog(LogItem item) {}
+  void onLog(LogItem log) {}
 
   /// Get Type from Generic
   Type _typeOf<I>() => I;
