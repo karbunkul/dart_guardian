@@ -11,7 +11,7 @@ class FatalException extends BaseException {}
 class LimitException extends BaseException {}
 
 abstract class ILog {
-  void onLog(GuardianLog log);
+  void onLog(ErrorReport log);
 }
 
 class LogMock extends Mock implements ILog {}
@@ -22,13 +22,13 @@ class Guardian<T> extends BaseGuardian<T, BaseException> {
   Guardian(this.mock);
 
   @override
-  void onLog(GuardianLog log) => mock.onLog(log);
+  void onReport(ErrorReport log) => mock.onLog(log);
 
   @override
   BaseException unexpectedError(Object error) => FatalException();
 }
 
-class GuardianLogMock extends Mock implements GuardianLog {}
+class GuardianLogMock extends Mock implements ErrorReport {}
 
 void main() {
   final logMock = LogMock();
@@ -119,7 +119,7 @@ void main() {
 
         final captured = verify(() => guardian.mock.onLog(captureAny()));
         expect(captured.callCount, equals(1));
-        final log = captured.captured.first as GuardianLog;
+        final log = captured.captured.first as ErrorReport;
 
         expect(log.extra.toString(), equals(extra.toString()));
         expect(log.message, equals('Error in handler for ArgumentError'));
@@ -146,7 +146,7 @@ void main() {
 
         final captured = verify(() => guardian.mock.onLog(captureAny()));
         expect(captured.callCount, equals(1));
-        final log = captured.captured.first as GuardianLog;
+        final log = captured.captured.first as ErrorReport;
 
         expect(log.extra.toString(), equals(extra.toString()));
         expect(log.message, equals('Error in handler for ArgumentError'));
@@ -210,7 +210,7 @@ void main() {
 
         final captured = verify(() => guardian.mock.onLog(captureAny()));
         expect(captured.callCount, equals(1));
-        final log = captured.captured.first as GuardianLog;
+        final log = captured.captured.first as ErrorReport;
 
         expect(log.extra.toString(), equals(extra.toString()));
         expect(log.message, equals('Error in handler for ArgumentError'));
@@ -237,7 +237,7 @@ void main() {
 
         final captured = verify(() => guardian.mock.onLog(captureAny()));
         expect(captured.callCount, equals(1));
-        final log = captured.captured.first as GuardianLog;
+        final log = captured.captured.first as ErrorReport;
 
         expect(log.extra.toString(), equals(extra.toString()));
         expect(log.message, equals('Error in handler for ArgumentError'));

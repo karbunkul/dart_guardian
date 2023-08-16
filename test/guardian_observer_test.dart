@@ -5,12 +5,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 abstract class ILog {
-  void onLog(GuardianLog log);
+  void onLog(ErrorReport log);
 }
 
 class LogMock extends Mock implements ILog {}
 
-class GuardianLogMock extends Mock implements GuardianLog {}
+class GuardianLogMock extends Mock implements ErrorReport {}
 
 class StackTraceMock extends Mock implements StackTrace {}
 
@@ -56,18 +56,18 @@ void main() {
       final error = TimeoutException('test');
 
       GuardianObserver.onLog(
-        GuardianLog(
+        ErrorReport(
           message: message,
           error: error,
           stackTrace: stackTrace,
           extra: extra,
-          traces: [],
+          logs: [],
         ),
       );
 
       final captured = verify(() => mock.onLog(captureAny()));
       expect(captured.callCount, equals(1));
-      final log = captured.captured.first as GuardianLog;
+      final log = captured.captured.first as ErrorReport;
 
       expect(log.extra.toString(), equals(extra.toString()));
       expect(log.message, equals(message));

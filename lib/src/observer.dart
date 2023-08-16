@@ -1,9 +1,9 @@
 import 'package:meta/meta.dart';
 
+import 'error_report.dart';
 import 'exceptions.dart';
-import 'log.dart';
 
-typedef OnLogCallback = void Function(GuardianLog);
+typedef OnLogCallback = void Function(ErrorReport);
 
 class GuardianObserver {
   static final _singleton = GuardianObserver._();

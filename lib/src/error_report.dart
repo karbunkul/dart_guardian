@@ -1,19 +1,19 @@
-import 'package:guardian/src/trace_item.dart';
+import 'package:guardian/src/log_item.dart';
 
 typedef LogExtra = Map<String, dynamic>;
 
-class GuardianLog {
+class ErrorReport {
   final String message;
   final Object error;
   final StackTrace stackTrace;
   final LogExtra extra;
-  final List<TraceItem> traces;
+  final List<LogItem> logs;
 
-  GuardianLog({
+  ErrorReport({
     required this.message,
     required this.error,
     required this.stackTrace,
     required this.extra,
-    required this.traces,
+    required this.logs,
   });
 }

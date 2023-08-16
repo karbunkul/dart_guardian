@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:guardian/src/trace_item.dart';
+import 'package:guardian/src/log_item.dart';
 import 'package:meta/meta.dart';
 
+import 'error_report.dart';
 import 'exceptions.dart';
 import 'handlers.dart';
-import 'log.dart';
 import 'logger.dart';
 
 typedef GuardHandler<T> = T Function(Logger logger);
@@ -15,13 +15,14 @@ typedef UnexpectedCallback<E> = E Function(Object error);
 abstract class BaseGuardian<T, E extends Error> {
   final Map<Type, IHandler> _handlers = {};
   final LogExtra _extra = {};
-  late final _logger = _Logger(onTrace: onTrace);
+  late final _logger = _Logger(onTrace: onLog);
+  bool _verbose = false;
 
   UnexpectedCallback<E>? _unexpectedCallback;
 
   /// Handler for logging unexpected errors
   @protected
-  void onLog(GuardianLog log);
+  void onReport(ErrorReport log);
 
   /// Unexpected error, must be extend E
   @protected
@@ -63,6 +64,18 @@ abstract class BaseGuardian<T, E extends Error> {
     } catch (error, stackTrace) {
       return _onCatchError(error, stackTrace);
     }
+  }
+
+  /// Setup logger name
+  BaseGuardian<T, E> loggerName(String name) {
+    _logger.name = name;
+    return this;
+  }
+
+  /// Setup logger name
+  BaseGuardian<T, E> verboseMode(bool verbose) {
+    _verbose = verbose;
+    return this;
   }
 
   /// Convert error to exception extend from E
@@ -108,10 +121,16 @@ abstract class BaseGuardian<T, E extends Error> {
 
       try {
         newError = handler.castMap(error);
+        if (_verbose) {
+          _logger.verbose(message: 'Map error: $handler successfully done');
+        }
       } on Object catch (err, stack) {
         final key = error.runtimeType;
         final message = 'Error in handler for $key';
-        _onError(message: message, error: err, stackTrace: stack);
+        if (_verbose) {
+          _logger.message(message);
+        }
+        _onReport(message: message, error: err, stackTrace: stack);
       } finally {
         if (newError != null) {
           throw Error.throwWithStackTrace(newError, stackTrace);
@@ -121,11 +140,19 @@ abstract class BaseGuardian<T, E extends Error> {
 
     if (handler is Handler) {
       try {
-        return handler.castHandle(error);
+        final result = handler.castHandle(error);
+        if (_verbose) {
+          _logger.verbose(message: 'Handle error: $handler successfully done');
+        }
+
+        return result;
       } on Object catch (err, stack) {
         final key = error.runtimeType;
         final message = 'Error in handler for $key';
-        _onError(message: message, error: err, stackTrace: stack);
+        if (_verbose) {
+          _logger.verbose(message: message);
+        }
+        _onReport(message: message, error: err, stackTrace: stack);
       }
     }
 
@@ -134,22 +161,22 @@ abstract class BaseGuardian<T, E extends Error> {
     }
 
     const message = 'UnexpectedError';
-    _onError(message: message, error: error, stackTrace: stackTrace);
+    _onReport(message: message, error: error, stackTrace: stackTrace);
   }
 
   /// Log unexpected error
-  Never _onError({
+  Never _onReport({
     required String message,
     required Object error,
     required StackTrace stackTrace,
   }) {
-    onLog(
-      GuardianLog(
+    onReport(
+      ErrorReport(
         message: message,
         error: error,
         stackTrace: stackTrace,
         extra: _extra,
-        traces: _logger.items,
+        logs: _logger.items,
       ),
     );
 
@@ -157,35 +184,64 @@ abstract class BaseGuardian<T, E extends Error> {
     throw Error.throwWithStackTrace(callback(error), stackTrace);
   }
 
-  void onTrace(TraceItem item) {}
+  void onLog(LogItem item) {}
 
   /// Get Type from Generic
   Type _typeOf<I>() => I;
 }
 
-typedef OnTraceCallback = void Function(TraceItem item);
+typedef OnTraceCallback = void Function(LogItem item);
 
 class _Logger extends Logger {
   final OnTraceCallback onTrace;
+  String? _name;
 
-  final List<TraceItem> _items = [];
+  final List<LogItem> _items = [];
 
   _Logger({required this.onTrace});
 
+  set name(String value) => _name = value;
+
   @override
   void info<T>({required String message, required T data}) {
-    final item = TraceItem(message: message, data: data);
+    final item = LogItem(
+      message: message,
+      data: data,
+      logger: _name,
+      sourceLine: _sourceLine(2),
+    );
     _items.add(item);
     onTrace(item);
   }
 
   @override
   void message(String message) {
-    final item = TraceItem(message: message);
+    final item = LogItem(
+      message: message,
+      logger: _name,
+      sourceLine: _sourceLine(2),
+    );
+
     _items.add(item);
     onTrace(item);
   }
 
+  void verbose<T>({required String message, T? data}) {
+    final item = LogItem(
+      message: message,
+      data: data,
+      logger: _name,
+    );
+    onTrace(item);
+  }
+
   void clear() => _items.clear();
-  List<TraceItem> get items => List.unmodifiable(_items);
+  List<LogItem> get items => List.unmodifiable(_items);
+
+  String _sourceLine(int depth) {
+    return StackTrace.current
+        .toString()
+        .split('\n')[depth]
+        .replaceAll(RegExp(r'^.[^\(]+'), '');
+  }
 }
